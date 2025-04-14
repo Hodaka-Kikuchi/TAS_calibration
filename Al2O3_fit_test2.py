@@ -8,7 +8,7 @@ d_mono = 3.355/2
 #ei = 5*4
 #lambda_ideal=9.045/(ei**(1/2))
 #print(lambda_ideal)
-lambda_ideal = 2.023  # [Å] 理想波長(HODACA:2.372,HER:2.023)
+lambda_ideal = 2.372  # [Å] 理想波長(HODACA:2.372,HER:2.023)
 
 # 六方晶 Al₂O₃ の格子定数
 a_Al2O3 = 4.758  # [Å]
@@ -66,10 +66,12 @@ data = np.array([
 """
 
 data = np.array([
-    [1.00,1.00,3.00,57.198],
-    [0.00,2.00,4.00,71.060],
-    [1.00,1.00,6.00,78.302],
-    [3.00,0.00,0.00,94.800]
+    [0.00, 1.00, 2.00, 39.0915],
+    [1.00, 0.00, 4.00, 54.5381],
+    #[0.00, 0.00, 6.00, 66.4082],
+    [1.00, 1.00, 3.00, 68.4259],
+    [0.00, 2.00, 4.00, 84.9313],
+    [1.00, 1.00, 6.00, 94.4839]
 ])
 
 h, k, l, theta_obs = data.T
@@ -128,9 +130,9 @@ print(f"フィッティング結果:")
 print(f"  波長のずれ Δλ = {delta_lambda:.6f} Å")
 #print(f"  モノクロメータの回転角のずれ Δθ_mono = {delta_theta_mono:.4f}°")
 
-print(f"  se c1 @(c1) - ({delta_theta_mono:.4f})")
-print(f"  se a1 @(a1) - ({2*delta_theta_mono:.4f})")
-print(f"  se a2 @(a2) - ({(delta_A2_fit):.4f})")
+print(f"  se c1 @(c1)-({delta_theta_mono:.4f})")
+print(f"  se a1 @(a1)-({2*delta_theta_mono:.4f})")
+print(f"  se a2 @(a2)-({(delta_A2_fit):.4f})")
 
 # プロット
 theta_fit = np.arcsin(lambda_fit / (2 * d_hkl)) + np.radians(delta_A2_fit / 2)
