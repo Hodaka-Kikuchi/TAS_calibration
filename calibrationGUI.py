@@ -5,6 +5,10 @@ import matplotlib
 matplotlib.use('TkAgg')#よくわかんないけどこれないとexe化したときにグラフが表示されない。超重要
 from scipy.optimize import basinhopping, least_squares
 import math
+import configparser
+# osのインポート
+import os
+import sys
 
 # 右上にバージョン情報を表示
 __version__ = '1.0.0'
@@ -69,22 +73,22 @@ lc_lbl6.grid(row=0, column=5,sticky="NSEW")
 
 lc_txt1 = ttk.Entry(LC)
 lc_txt1.grid(row=1, column=0,sticky="NSEW")
-lc_txt1.insert(0,'4.758')
+#lc_txt1.insert(0,'4.758')
 lc_txt2 = ttk.Entry(LC)
 lc_txt2.grid(row=1, column=1,sticky="NSEW")
-lc_txt2.insert(0,'4.758')
+#lc_txt2.insert(0,'4.758')
 lc_txt3 = ttk.Entry(LC)
 lc_txt3.grid(row=1, column=2,sticky="NSEW")
-lc_txt3.insert(0,'12.991')
+#lc_txt3.insert(0,'12.991')
 lc_txt4 = ttk.Entry(LC)
 lc_txt4.grid(row=1, column=3,sticky="NSEW")
-lc_txt4.insert(0,'90')
+#lc_txt4.insert(0,'90')
 lc_txt5 = ttk.Entry(LC)
 lc_txt5.grid(row=1, column=4,sticky="NSEW")
-lc_txt5.insert(0,'90')
+#lc_txt5.insert(0,'90')
 lc_txt6 = ttk.Entry(LC)
 lc_txt6.grid(row=1, column=5,sticky="NSEW")
-lc_txt6.insert(0,'120')
+#lc_txt6.insert(0,'120')
 
 # 測定条件入力フレーム
 MC = ttk.Labelframe(root,text= "measurement condition")
@@ -106,13 +110,13 @@ mc_lbl3.grid(row=0, column=2,sticky="NSEW")
 
 mc_txt1 = ttk.Entry(MC)
 mc_txt1.grid(row=1, column=0,sticky="NSEW")
-mc_txt1.insert(0,'14.5404')
+#mc_txt1.insert(0,'14.5404')
 mc_txt2 = ttk.Entry(MC)
 mc_txt2.grid(row=1, column=1,sticky="NSEW")
-mc_txt2.insert(0,'2.3720')
+#mc_txt2.insert(0,'2.3720')
 mc_txt3 = ttk.Entry(MC)
 mc_txt3.grid(row=1, column=2,sticky="NSEW")
-mc_txt3.insert(0,'2.6489')
+#mc_txt3.insert(0,'2.6489')
 
 def trans_ELK(event=None):
     """
@@ -195,7 +199,7 @@ for i in range(4):  # 0-7行までの設定
 hkl_labels = ["h", "k", "l", "A2obs", "A2calc"]
 for i, label in enumerate(hkl_labels):
     ttk.Label(HKL, text=label).grid(row=0, column=1+i, sticky="NSEW")
-
+"""
 default_hkl_values =  np.array([
     [0, 1, 2, 39.8404],
     [1, 0, 4, 55.4065],
@@ -204,15 +208,7 @@ default_hkl_values =  np.array([
     [1, 1, 6, 95.5771],
 ])
 """
-data = np.array([
-    [0.00, 1.00, 2.00, 39.8404],
-    [1.00, 0.00, 4.00, 55.4065],
-    #[0.00, 0.00, 6.00, 66.4082],
-    [1.00, 1.00, 3.00, 69.3545],
-    [0.00, 2.00, 4.00, 85.9428],
-    [1.00, 1.00, 6.00, 95.5771]
-])
-"""
+
 # 初めはh,k,l,A2obs,A2calcという順番で配置していたが、実質hklは入力しないことに気が付いた。そのため縦の順番にしてtabキーを使用できるようにした
 """
 hklindexsum = []
@@ -246,8 +242,8 @@ for i in range(5):  # 最大5個のピーク (列方向)
         entry = ttk.Entry(HKL)
         entry.grid(row=1 + j, column=1 + i, sticky="NSEW")  # ← iとjを入れ替えた
         hklindexsum[j].append(entry)
-        if i < 4:# デフォルトの値の行数によって変わる
-            entry.insert(0, str(default_hkl_values[j][i]))  # default_hkl_values[i][j]はそのままでOK
+        #if i < 3:# デフォルトの値の行数によって変わる
+        #    entry.insert(0, str(default_hkl_values[j][i]))  # default_hkl_values[i][j]はそのままでOK
 
 checkboxes = []
 
@@ -426,7 +422,7 @@ def A1A2fitting():
             def make_copy_func(text=line):  # デフォルト引数でtextを固定
                 return lambda: copy_to_clipboard(text)
             
-            copy_btn = ttk.Button(RD, text="コピー", command=make_copy_func())
+            copy_btn = ttk.Button(RD, text="copy", command=make_copy_func())
             copy_btn.grid(row=i, column=1, sticky="NSEW")
 
         # すべてコピーする関数
@@ -435,7 +431,7 @@ def A1A2fitting():
             copy_to_clipboard(all_text)
 
         # すべてコピー ボタン
-        all_copy_btn = ttk.Button(RD, text="すべてコピー", command=copy_all)
+        all_copy_btn = ttk.Button(RD, text="copy all", command=copy_all)
         all_copy_btn.grid(row=0, column=2, rowspan=4, sticky="NSEW")
 
     # 共通のクリップボードコピー関数
@@ -488,182 +484,111 @@ fit_button.grid(row=6, column=3, columnspan=3, sticky="NSEW")
 result_frame = ttk.Frame(root)  # root はあなたのメインウィンドウ
 result_frame.grid(row=99, column=0, columnspan=10, sticky="NSEW", padx=5, pady=5)
 
+#メニューバーの作成
+menubar = tk.Menu(root)
+root.configure(menu=menubar)
 
+# iniファイルの読み込み
+def load_values_from_ini():
+    config = configparser.ConfigParser()
+    # .exe化した場合に対応する
+    if getattr(sys, 'frozen', False):
+        # .exeの場合、sys.argv[0]が実行ファイルのパスになる
+        ini_path = os.path.join(os.path.dirname(sys.argv[0]), 'config.ini')
+    else:
+        # .pyの場合、__file__がスクリプトのパスになる
+        ini_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+    config.read(ini_path)
+    
+    # 各エントリに対応する値を読み込み、挿入
+    lc_txt1.delete(0, tk.END)  # 既存の値をクリア
+    lc_txt1.insert(0, config['LC'].get('a', '4.758'))
+    lc_txt2.delete(0, tk.END)  # 既存の値をクリア
+    lc_txt2.insert(0, config['LC'].get('b', '4.758'))
+    lc_txt3.delete(0, tk.END)  # 既存の値をクリア
+    lc_txt3.insert(0, config['LC'].get('c', '12.991'))
+    lc_txt4.delete(0, tk.END)  # 既存の値をクリア
+    lc_txt4.insert(0, config['LC'].get('alpha', '90'))
+    lc_txt5.delete(0, tk.END)  # 既存の値をクリア
+    lc_txt5.insert(0, config['LC'].get('beta', '90'))
+    lc_txt6.delete(0, tk.END)  # 既存の値をクリア
+    lc_txt6.insert(0, config['LC'].get('gamma', '120'))
+    
+    mc_txt1.delete(0, tk.END)  # 既存の値をクリア
+    mc_txt1.insert(0, config['MC'].get('energy', '14.5404'))
+    mc_txt2.delete(0, tk.END)  # 既存の値をクリア
+    mc_txt2.insert(0, config['MC'].get('lambda', '2.3720'))
+    mc_txt3.delete(0, tk.END)  # 既存の値をクリア
+    mc_txt3.insert(0, config['MC'].get('wavelength', '2.6489'))
+    
+    # MLセクション取得
+    ml_section = config["ML"]
+    # Entryに値を挿入（h, k, l のみ）
+    for i in range(5):  # ピーク番号
+        for j in range(3):  # h, k, l に対応
+            key = f"{['h', 'k', 'l'][j]}{i+1}"  # e.g., h1, k1, l1,...
+            value = ml_section.get(key, "")  # デフォルト空文字
+            hklindexsum[i][j].delete(0, tk.END)     # 既存の内容を削除
+            hklindexsum[i][j].insert(0, value)
+    
+def save_values_to_ini():
+    """
+    現在のウィジェットの値をINIファイルに保存する
+    """
+    config = configparser.ConfigParser()
+    
+    # INIファイルのパスを決定
+    if getattr(sys, 'frozen', False):
+        ini_path = os.path.join(os.path.dirname(sys.argv[0]), 'config.ini')
+    else:
+        ini_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+    
+    # 既存のINIファイルを読み込む
+    if os.path.exists(ini_path):
+        config.read(ini_path, encoding='utf-8')  # UTF-8で読み込み
+    
+    # LC セクション（格子定数）
+    config["LC"] = {
+        "a": lc_txt1.get(),
+        "b": lc_txt2.get(),
+        "c": lc_txt3.get(),
+        "alpha": lc_txt4.get(),
+        "beta": lc_txt5.get(),
+        "gamma": lc_txt6.get(),
+    }
 
+    # MC セクション（モノクロメータ）
+    config["MC"] = {
+        "energy": mc_txt1.get(),
+        "lambda": mc_txt2.get(),
+        "wavelength": mc_txt3.get(),
+    }
 
+    # ML セクション（hklリスト）
+    ml_section = {}
+    for i in range(5):  # ピーク番号（列方向）
+        for j, axis in enumerate(['h', 'k', 'l']):  # h, k, l に対応（行方向）
+            value = hklindexsum[i][j].get()
+            key = f"{axis}{i+1}"  # 例: h1, k1, l1 ...
+            ml_section[key] = value
+    config["ML"] = ml_section
+    
+    # 保存処理
+    with open(ini_path, 'w') as configfile:
+        config.write(configfile)
 
+# アプリ起動時にデフォルト値を読み込む
+load_values_from_ini()
 
+#fileメニュー(setting)
+filemenu = tk.Menu(menubar,tearoff=0)
+menubar.add_cascade(label="ini.file",menu=filemenu)
+#fileメニューにini fileのload
+filemenu.add_command(label="load ini.file",command=load_values_from_ini)
+#fileメニューにexitを追加。ついでにexit funcも実装
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-################################################################################################
-"""
-# モノクロメータの d 値 [Å]
-d_mono = 3.355/2  
-#ei = 5*4
-#lambda_ideal=9.045/(ei**(1/2))
-#print(lambda_ideal)
-lambda_ideal = 2.372  # [Å] 理想波長(HODACA:2.372,HER:2.023)
-
-# 六方晶 Al₂O₃ の格子定数
-a_Al2O3 = 4.758  # [Å]
-c_Al2O3 = 12.991  # [Å]
-
-# CSV データ (h, k, l, 2θ) を NumPy 配列として読み込む
-"""# 理想値(HODACA, 3.635meV,2.372Å)
-data = np.array([
-    [0.00, 1.00, 2.00, 39.8498],
-    [1.00, 0.00, 4.00, 55.4031],
-    [0.00, 0.00, 6.00, 66.4082],
-    [1.00, 1.00, 3.00, 69.3191],
-    [0.00, 2.00, 4.00, 85.9339],
-    [1.00, 1.00, 6.00, 95.5477]
-])
-"""
-
-"""# 理想値(HER, 5.000meV,2.023Å)
-data = np.array([
-    [1.00,1.00,3.00,58.010],
-    [0.00,2.00,4.00,71.060],
-    [1.00,1.00,6.00,78.302],
-    [3.00,0.00,0.00,94.800]
-])
-"""
-
-"""# A2のみずらす。
-data = np.array([
-    [0.00, 1.00, 2.00, 38.8498],
-    [1.00, 0.00, 4.00, 54.4031],
-    [0.00, 0.00, 6.00, 65.4082],
-    [1.00, 1.00, 3.00, 68.3191],
-    [0.00, 2.00, 4.00, 84.9339],
-    [1.00, 1.00, 6.00, 94.5477]
-])
-"""
-
-"""# lamdaのみずらす。12.74 meVすなわち2.5341A、差は-0.1621A
-data = np.array([
-    [0.00, 1.00, 2.00, 42.7069],
-    [1.00, 0.00, 4.00, 59.5647],
-    [1.00, 1.00, 3.00, 74.8370],
-    [0.00, 2.00, 4.00, 93.4782],
-    [1.00, 1.00, 6.00, 104.5982]
-])
-"""
-
-"""
-data = np.array([
-    [1.00,1.00,3.00,58.264],
-    [0.00,2.00,4.00,71.326],
-    [1.00,1.00,6.00,78.561],
-    [3.00,0.00,0.00,95.077]
-])
-"""
-
-data = np.array([
-    [0.00, 1.00, 2.00, 39.0915],
-    [1.00, 0.00, 4.00, 54.5381],
-    #[0.00, 0.00, 6.00, 66.4082],
-    [1.00, 1.00, 3.00, 68.4259],
-    [0.00, 2.00, 4.00, 84.9313],
-    [1.00, 1.00, 6.00, 94.4839]
-])
-
-h, k, l, theta_obs = data.T
-theta_obs = np.radians(theta_obs / 2)  # 2θ → θ に変換
-
-# 六方晶の d_hkl の計算
-def calc_d_hkl(h, k, l, a, c):
-    term1 = (4/3) * (h**2 + h*k + k**2) / a**2
-    term2 = (l**2) / c**2
-    return 1 / np.sqrt(term1 + term2)
-
-d_hkl = calc_d_hkl(h, k, l, a_Al2O3, c_Al2O3)
-
-# 残差関数 (最小化する目的関数)
-def residuals(params, d_hkl, theta_obs):
-    delta_A1, delta_A2 = params
-
-    # モノクロメータの回転角 (A1)
-    A1 = np.arcsin(lambda_ideal / (2 * d_mono))  # 理想値
-    A1_new = A1 + np.radians(delta_A1)  # ΔA1 を加えたもの
-
-    # ΔA1 による波長の変化
-    lambda_new = 2 * d_mono * np.sin(A1_new)
-
-    # 新しい 2θ (A2) の計算
-    theta_calc = np.arcsin(lambda_new / (2 * d_hkl))
-
-    # ΔA2 (2θオフセット) を考慮
-    theta_calc = theta_calc + np.radians(delta_A2 / 2)
-
-    return np.sum((theta_calc - theta_obs) ** 2)  # 残差の 2 乗和を返す
-
-# 初期値 (ΔA1 = 0°, ΔA2 = 0°)
-initial_guess = [0.0, 0.0]
-
-# グローバル最適化 (basinhopping)
-minimizer_kwargs = {"method": "L-BFGS-B", "args": (d_hkl, theta_obs)}
-result = basinhopping(residuals, initial_guess, minimizer_kwargs=minimizer_kwargs, niter=200, T=1.0, stepsize=0.5)
-
-# 最適化されたパラメータ
-delta_A1_fit, delta_A2_fit = result.x
-
-# フィッティング後の波長とモノクロメータ回転角
-A1_ideal = np.arcsin(lambda_ideal / (2 * d_mono))
-A1_fit = A1_ideal + np.radians(delta_A1_fit)
-lambda_fit = 2 * d_mono * np.sin(A1_fit)
-
-# 波長のずれとモノクロメータの回転角
-delta_lambda = lambda_ideal - lambda_fit
-delta_theta_mono = np.degrees(A1_ideal - A1_fit)
-
-# 結果の表示
-print(f"フィッティング結果:")
-#print(f"  モノクロメータの回転角のずれ ΔA1 = {delta_A1_fit:.4f}°")
-#print(f"  2θ のオフセット ΔA2 = {delta_A2_fit:.4f}°")
-print(f"  波長のずれ Δλ = {delta_lambda:.6f} Å")
-#print(f"  モノクロメータの回転角のずれ Δθ_mono = {delta_theta_mono:.4f}°")
-
-print(f"  se c1 @(c1)-({delta_theta_mono:.4f})")
-print(f"  se a1 @(a1)-({2*delta_theta_mono:.4f})")
-print(f"  se a2 @(a2)-({(delta_A2_fit):.4f})")
-
-# プロット
-theta_fit = np.arcsin(lambda_fit / (2 * d_hkl)) + np.radians(delta_A2_fit / 2)
-plt.scatter(np.degrees(theta_obs * 2), np.degrees(theta_fit * 2), label="Fitted", color="red")
-plt.plot([30, 110], [30, 110], linestyle="--", color="black", label="y=x (ideal)")
-plt.xlabel("Observed 2θ [deg]")
-plt.ylabel("Fitted 2θ [deg]")
-plt.legend()
-plt.grid()
-plt.show()
-"""
+#fileメニューにini fileのsave
+filemenu.add_command(label="save ini.file",command=save_values_to_ini)
 
 #window状態の維持
 root.mainloop()
