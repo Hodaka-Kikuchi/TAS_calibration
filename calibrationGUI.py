@@ -106,13 +106,13 @@ mc_lbl3.grid(row=0, column=2,sticky="NSEW")
 
 mc_txt1 = ttk.Entry(MC)
 mc_txt1.grid(row=1, column=0,sticky="NSEW")
-mc_txt1.insert(0,'20')
+mc_txt1.insert(0,'14.5404')
 mc_txt2 = ttk.Entry(MC)
 mc_txt2.grid(row=1, column=1,sticky="NSEW")
-mc_txt2.insert(0,'2.0225')
+mc_txt2.insert(0,'2.3720')
 mc_txt3 = ttk.Entry(MC)
 mc_txt3.grid(row=1, column=2,sticky="NSEW")
-mc_txt3.insert(0,'3.1066')
+mc_txt3.insert(0,'2.6489')
 
 def trans_ELK(event=None):
     """
@@ -197,13 +197,22 @@ for i, label in enumerate(hkl_labels):
     ttk.Label(HKL, text=label).grid(row=0, column=1+i, sticky="NSEW")
 
 default_hkl_values =  np.array([
-    [0, 1, 2],
-    [1, 0, 4],
-    [1, 1, 3],
-    [0, 2, 4],
-    [1, 1, 6],
+    [0, 1, 2, 39.8404],
+    [1, 0, 4, 55.4065],
+    [1, 1, 3, 69.3545],
+    [0, 2, 4, 85.9428],
+    [1, 1, 6, 95.5771],
 ])
-
+"""
+data = np.array([
+    [0.00, 1.00, 2.00, 39.8404],
+    [1.00, 0.00, 4.00, 55.4065],
+    #[0.00, 0.00, 6.00, 66.4082],
+    [1.00, 1.00, 3.00, 69.3545],
+    [0.00, 2.00, 4.00, 85.9428],
+    [1.00, 1.00, 6.00, 95.5771]
+])
+"""
 # 初めはh,k,l,A2obs,A2calcという順番で配置していたが、実質hklは入力しないことに気が付いた。そのため縦の順番にしてtabキーを使用できるようにした
 """
 hklindexsum = []
@@ -237,7 +246,7 @@ for i in range(5):  # 最大5個のピーク (列方向)
         entry = ttk.Entry(HKL)
         entry.grid(row=1 + j, column=1 + i, sticky="NSEW")  # ← iとjを入れ替えた
         hklindexsum[j].append(entry)
-        if i < 3:# デフォルトの値の行数によって変わる
+        if i < 4:# デフォルトの値の行数によって変わる
             entry.insert(0, str(default_hkl_values[j][i]))  # default_hkl_values[i][j]はそのままでOK
 
 checkboxes = []
@@ -288,7 +297,7 @@ def A2calc():
                 
                 #lamdaとkを計算
                 Li=9.045/(ei**(1/2))
-                Ki=2*3.1415926535/Li
+                Ki=2*math.pi/Li
                 tta=math.degrees(math.acos((2*Ki**2-Nhkl**2)/(2*Ki**2)))
                 # A2calcの欄（5列目）に結果を挿入（既存の文字列を一度クリア）
                 hklindexsum[i][4].delete(0, tk.END)
@@ -307,9 +316,10 @@ d_mono = 3.355/2
 # 残差関数 (最小化する目的関数)
 def residuals(params, d_hkl, theta_obs):
     delta_A1, delta_A2 = params
-    #lambda_ideal = 2.372  # [Å] 理想波長(HODACA:2.372,HER:2.023)
     ei = float(mc_txt1.get())
-    lambda_ideal=9.045/(ei**(1/2))
+    #lambda_ideal=9.045/(ei**(1/2))
+    lambda_ideal = float(mc_txt2.get())
+    #lambda_ideal = 2.372  # [Å] 理想波長(HODACA:2.372,HER:2.023)
     # モノクロメータの回転角 (A1)
     A1 = np.arcsin(lambda_ideal / (2 * d_mono))  # 理想値
     A1_new = A1 + np.radians(delta_A1)  # ΔA1 を加えたもの
@@ -339,7 +349,9 @@ def A1A2fitting():
     lbe=float(lc_txt5.get())
     lga=float(lc_txt6.get())
     ei=float(mc_txt1.get())
-    lambda_ideal=9.045/(ei**(1/2))
+    #lambda_ideal=9.045/(ei**(1/2))
+    lambda_ideal = float(mc_txt2.get())
+    #lambda_ideal = 2.372  # [Å] 理想波長(HODACA:2.372,HER:2.023)
     # ベクトルu,v,wを定義し、rluを自動で計算する
     U = [la*math.cos(math.radians(0)), 0, 0]
     V = [lb*math.cos(math.radians(lga)), lb*math.sin(math.radians(lga)), 0]
@@ -363,7 +375,7 @@ def A1A2fitting():
                 
                 #lamdaとkを計算
                 Li=9.045/(ei**(1/2))
-                Ki=2*3.1415926535/Li
+                Ki=2*math.pi/Li
                 A2cal=math.degrees(math.acos((2*Ki**2-Nhkl**2)/(2*Ki**2)))
                 # A2calcの欄（5列目）に結果を挿入（既存の文字列を一度クリア）
                 hklindexsum[i][4].delete(0, tk.END)
@@ -372,7 +384,7 @@ def A1A2fitting():
                 
             except ValueError:
                 pass
-
+    
     H, K, L, thetaobs, thetacal,d_hkl = np.array(dataset).T
     theta_obs = np.radians(thetaobs / 2)  # 2θ → θ に変換
     theta_cal = np.radians(thetacal / 2)  # 2θ → θ に変換
