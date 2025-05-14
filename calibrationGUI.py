@@ -613,8 +613,8 @@ def load_or_create_config():
         with open(ini_path, 'w') as configfile:
             config.write(configfile)
         messagebox.showinfo(
-            "config.ini 作成",
-            f"config.ini が見つからなかったため、\nデフォルト設定で新しく作成しました。\n\n{ini_path}"
+            "config.ini created",
+            f"config.ini was not found、\nso a new one was created with default settings.\n\n{ini_path}"
         )
     else:
         config.read(ini_path)
