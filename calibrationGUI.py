@@ -409,7 +409,7 @@ def A1A2fitting():
 
         # 結果文字列のリスト
         results = [
-            f"波長のずれ Δλ = {delta_lambda:.6f} Å",
+            f"wavelength offset Δλ = {delta_lambda:.6f} Å",
             f"se c1 @(c1)-({delta_theta_mono:.4f})",
             f"se a1 @(a1)-({2 * delta_theta_mono:.4f})",
             f"se a2 @(a2)-({delta_A2_fit:.4f})"
@@ -422,7 +422,7 @@ def A1A2fitting():
             def make_copy_func(text=line):  # デフォルト引数でtextを固定
                 return lambda: copy_to_clipboard(text)
             
-            copy_btn = ttk.Button(RD, text="copy", command=make_copy_func())
+            copy_btn = ttk.Button(RD, text="Copy left row", command=make_copy_func())
             copy_btn.grid(row=i, column=1, sticky="NSEW")
 
         # すべてコピーする関数
@@ -530,7 +530,6 @@ def load_values_from_ini():
             value = ml_section.get(key, "")  # デフォルト空文字
             hklindexsum[i][j].delete(0, tk.END)     # 既存の内容を削除
             hklindexsum[i][j].insert(0, value)
-    
 def save_values_to_ini():
     """
     現在のウィジェットの値をINIファイルに保存する
