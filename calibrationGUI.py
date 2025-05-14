@@ -9,9 +9,10 @@ import configparser
 # osのインポート
 import os
 import sys
+import tkinter.messagebox as messagebox
 
 # 右上にバージョン情報を表示
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 # tlinterのインポート
 import tkinter as tk
@@ -575,8 +576,53 @@ def save_values_to_ini():
     # 保存処理
     with open(ini_path, 'w') as configfile:
         config.write(configfile)
+        
+def load_or_create_config():
+    config = configparser.ConfigParser()
+
+    # 実行ファイルと同じディレクトリに ini を探す（exe対応）
+    if getattr(sys, 'frozen', False):
+        ini_path = os.path.join(os.path.dirname(sys.argv[0]), 'config.ini')
+    else:
+        ini_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+
+    # iniファイルが存在しない場合は、デフォルト値で作成する
+    if not os.path.exists(ini_path):
+        config['LC'] = {
+            'a': '4.758',
+            'b': '4.758',
+            'c': '12.991',
+            'alpha': '90',
+            'beta': '90',
+            'gamma': '120',
+        }
+        config['MC'] = {
+            'energy': '14.5404',
+            'lambda': '2.3720',
+            'wavelength': '2.6489',
+        }
+        config['ML'] = {
+            'h1': '0', 'k1': '1', 'l1': '2',
+            'h2': '1', 'k2': '0', 'l2': '4',
+            'h3': '1', 'k3': '1', 'l3': '3',
+            'h4': '0', 'k4': '2', 'l4': '4',
+            'h5': '1', 'k5': '1', 'l5': '6',
+        }
+
+        # ファイルに保存
+        with open(ini_path, 'w') as configfile:
+            config.write(configfile)
+        messagebox.showinfo(
+            "config.ini 作成",
+            f"config.ini が見つからなかったため、\nデフォルト設定で新しく作成しました。\n\n{ini_path}"
+        )
+    else:
+        config.read(ini_path)
+
+    return config
 
 # アプリ起動時にデフォルト値を読み込む
+load_or_create_config()
 load_values_from_ini()
 
 #fileメニュー(setting)
@@ -595,5 +641,5 @@ root.mainloop()
 #############
 # pyinstaller 
 # 最初にディレクトリ移動
-# C:\DATA_HK\python\HODACA_calibration
+# cd C:\DATA_HK\python\HODACA_calibration
 # pyinstaller -F --noconsole calibrationGUI.py
