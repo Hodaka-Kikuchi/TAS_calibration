@@ -7,6 +7,7 @@ from scipy.optimize import curve_fit
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+import os
 
 # cd C:\DATA_HK\python\HODACA_calibration
 
@@ -21,8 +22,12 @@ def gaussian(x, a, mu, sigma):
 # 複数ファイル選択ダイアログ
 file_paths = filedialog.askopenfilenames(title="ファイルを選択してください")
 
+# 最初のファイルのディレクトリを取得
+output_dir = os.path.dirname(file_paths[0])
+output_path = os.path.join(output_dir, "C3_fit_results.txt")
+
 # プロット用設定
-fig, axs = plt.subplots(6, 4, figsize=(12, 8))
+fig, axs = plt.subplots(6, 4, figsize=(10, 8))
 axs = axs.flatten()
 
 fit_results = []  # 出力内容をためておくリスト
@@ -66,15 +71,16 @@ for i in range(len(file_paths)):
     # プロット
     ax = axs[i]
     ax.errorbar(x, y, yerr=yerr, fmt='o', label='Data')
+    param_label = head2[2]
     if not np.isnan(mu):
         xfit = np.linspace(min(x), max(x), 500)
         yfit = gaussian(xfit, *popt)
         ax.plot(xfit, yfit, 'r--', label='Fit')
-        title = f"No.{i+1} μ={mu:.4f}"
+        title = f"{param_label} μ={mu:.4f}"
         # コンソール出力
         #print(f"drive c3-{detector_num} {mu_str}")
     else:
-        title = f"No.{i+1} (Fit failed)"
+        title = f"{param_label} (Fit failed)"
     ax.set_title(title)
     ax.set_xlabel(param)
     ax.set_ylabel(detector_id)
@@ -83,9 +89,14 @@ for i in range(len(file_paths)):
     # 出力用に記録
     result_line = f"drive c3-{detector_num} {mu_str}"
     fit_results.append(result_line)
-
+"""
 # --- 最後に保存 ---
 with open("fit_results.txt", "w", encoding="utf-8") as f:
+    for line in fit_results:
+        f.write(line + "\n")
+"""
+# --- 結果保存 ---
+with open(output_path, "w", encoding="utf-8") as f:
     for line in fit_results:
         f.write(line + "\n")
 

@@ -17,3 +17,8 @@ drive c3-16 16.0850
 drive c3-17 -46.0118
 drive c3-18 -33.3764
 drive c3-19 -76.5450
+drive c3-20 -70.8374
+drive c3-21 -20.8943
+drive c3-22 2.2590
+drive c3-23 -19.3613
+drive c3-24 -76.0156

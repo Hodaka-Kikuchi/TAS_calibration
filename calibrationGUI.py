@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')#よくわかんないけどこれないとexe化したときにグラフが表示されない。超重要
 from scipy.optimize import basinhopping, least_squares
+from scipy.optimize import curve_fit
 import math
 import configparser
 # osのインポート
@@ -11,8 +12,14 @@ import os
 import sys
 import tkinter.messagebox as messagebox
 
+# tlinterのインポート
+import tkinter as tk
+from tkinter import ttk
+from tkinter import filedialog
+import os
+
 # 右上にバージョン情報を表示
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 # tlinterのインポート
 import tkinter as tk
@@ -42,13 +49,21 @@ root.protocol("WM_DELETE_WINDOW", on_closing)  # ウィンドウが閉じられ�
 
 # rootのグリッド設定
 root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=2)
-root.rowconfigure(1, weight=2)
-root.rowconfigure(2, weight=5)
-root.rowconfigure(3, weight=4)
+root.rowconfigure(0, weight=15)
+root.rowconfigure(1, weight=1)
+
+frame1 = ttk.Labelframe(root,text= "A1&A2 calibration")
+frame1.grid(row=0, column=0,sticky="NSEW")
+
+# frame1のグリッド設定
+frame1.columnconfigure(0, weight=1)
+frame1.rowconfigure(0, weight=2)
+frame1.rowconfigure(1, weight=2)
+frame1.rowconfigure(2, weight=5)
+frame1.rowconfigure(3, weight=4)
 
 # 格子定数入力フレーム
-LC = ttk.Labelframe(root,text= "lattice constant")
+LC = ttk.Labelframe(frame1,text= "lattice constant")
 LC.grid(row=0, column=0,sticky="NSEW")
 #frame2cb.grid_propagate(True)
 
@@ -92,7 +107,7 @@ lc_txt6.grid(row=1, column=5,sticky="NSEW")
 #lc_txt6.insert(0,'120')
 
 # 測定条件入力フレーム
-MC = ttk.Labelframe(root,text= "measurement condition")
+MC = ttk.Labelframe(frame1,text= "measurement condition")
 MC.grid(row=1, column=0,sticky="NSEW")
 
 # グリッドの設定（列と行の重みを均等にする）
@@ -125,7 +140,7 @@ def trans_ELK(event=None):
     """
     try:
         # フォーカスされているウィジェットを特定
-        focused_widget = root.focus_get()
+        focused_widget = frame1.focus_get()
 
         # 各エントリーボックスの値を取得
         energy = mc_txt1.get().strip()
@@ -176,7 +191,7 @@ mc_txt2.bind("<Return>", trans_ELK)
 mc_txt3.bind("<Return>", trans_ELK)
 
 # hkl入力フレーム
-HKL = ttk.Labelframe(root,text= "measurement results")
+HKL = ttk.Labelframe(frame1,text= "measurement results")
 HKL.grid(row=2, column=0,sticky="NSEW")
 #frame2cb.grid_propagate(True)
 
@@ -187,7 +202,7 @@ for i in range(7):  # 0-7行までの設定
     HKL.rowconfigure(i, weight=1)
     
 # 格子定数入力フレーム
-RD = ttk.Labelframe(root,text= "fitting results")
+RD = ttk.Labelframe(frame1,text= "fitting results")
 RD.grid(row=3, column=0,sticky="NSEW")
 
 # グリッドの設定（列と行の重みを均等にする）
@@ -482,7 +497,7 @@ fit_button = ttk.Button(HKL, text="fitting",command = A1A2fitting)
 fit_button.grid(row=6, column=3, columnspan=3, sticky="NSEW")
 
 # 1. 結果表示用のフレームを作成（初回のみでOK）
-result_frame = ttk.Frame(root)  # root はあなたのメインウィンドウ
+result_frame = ttk.Frame(frame1)  # frame1 はあなたのメインウィンドウ
 result_frame.grid(row=99, column=0, columnspan=10, sticky="NSEW", padx=5, pady=5)
 
 #メニューバーの作成
@@ -624,6 +639,105 @@ def load_or_create_config():
 # アプリ起動時にデフォルト値を読み込む
 load_or_create_config()
 load_values_from_ini()
+
+frame2 = ttk.Labelframe(root,text= "C3 calibration")
+frame2.grid(row=1, column=0,sticky="NSEW")
+# tab_002のグリッド設定
+frame2.columnconfigure(0, weight=1)
+frame2.rowconfigure(0, weight=1)
+
+# ガウス関数
+def gaussian(x, a, mu, sigma):
+    return a * np.exp(-(x - mu)**2 / (2 * sigma**2))
+
+def c3fitting():
+    # 複数ファイル選択ダイアログ
+    file_paths = filedialog.askopenfilenames(title="ファイルを選択してください")
+
+    # 最初のファイルのディレクトリを取得
+    output_dir = os.path.dirname(file_paths[0])
+    output_path = os.path.join(output_dir, "C3_fit_results.txt")
+
+    # プロット用設定
+    fig, axs = plt.subplots(6, 4, figsize=(10, 8))
+    axs = axs.flatten()
+
+    fit_results = []  # 出力内容をためておくリスト
+
+    for i in range(len(file_paths)):
+        with open(file_paths[i], "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            head = lines[31]
+            head2 = head.split()
+
+            if "Pt." in head2:
+                pass
+            else:
+                head = lines[32]
+                head2 = head.split()
+
+        # 数値データ読み込み
+        rdb = np.loadtxt(file_paths[i], comments='#')
+
+        # パラメータ名と対応検出器を抽出
+        param = head2[2]  # 左から3番目
+        detector_num = param.split('-')[1]
+        detector_id = f'D{detector_num}'
+        detector_index = head2.index(detector_id)
+
+        # x, y データ
+        x = rdb[:, 1]  # 3列目（インデックス2） → c3
+        y = rdb[:, detector_index-1]
+        yerr = np.sqrt(y)
+
+        # ガウスフィッティング
+        try:
+            popt, _ = curve_fit(gaussian, x, y, p0=[y.max(), x[np.argmax(y)], 1.0])
+            mu = popt[1]
+            mu_str = f"{mu:.4f}"
+        except RuntimeError:
+            popt = [0, 0, 0]
+            mu = np.nan
+            mu_str = f"{mu:.4f}"
+
+        # プロット
+        ax = axs[i]
+        ax.errorbar(x, y, yerr=yerr, fmt='o', label='Data')
+        param_label = head2[2]
+        if not np.isnan(mu):
+            xfit = np.linspace(min(x), max(x), 500)
+            yfit = gaussian(xfit, *popt)
+            ax.plot(xfit, yfit, 'r--', label='Fit')
+            title = f"{param_label} μ={mu:.4f}"
+            # コンソール出力
+            #print(f"drive c3-{detector_num} {mu_str}")
+        else:
+            title = f"{param_label} (Fit failed)"
+        ax.set_title(title)
+        ax.set_xlabel(param)
+        ax.set_ylabel(detector_id)
+        ax.legend()
+        
+        # 出力用に記録
+        result_line = f"drive c3-{detector_num} {mu_str}"
+        fit_results.append(result_line)
+    """
+    # --- 最後に保存 ---
+    with open("fit_results.txt", "w", encoding="utf-8") as f:
+        for line in fit_results:
+            f.write(line + "\n")
+    """
+    # --- 結果保存 ---
+    with open(output_path, "w", encoding="utf-8") as f:
+        for line in fit_results:
+            f.write(line + "\n")
+
+    plt.tight_layout()
+    plt.show()
+
+# ボタン作成
+btn_select = ttk.Button(frame2, text="select 24 files & fitting", command=c3fitting)
+btn_select.grid(row=0,column=0,sticky="NSEW")
 
 #fileメニュー(setting)
 filemenu = tk.Menu(menubar,tearoff=0)
