@@ -19,7 +19,7 @@ from tkinter import filedialog
 import os
 
 # 右上にバージョン情報を表示
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 # tlinterのインポート
 import tkinter as tk
