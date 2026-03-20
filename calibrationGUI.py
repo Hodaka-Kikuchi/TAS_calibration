@@ -1,4 +1,4 @@
-#cd C:\DATA_HK\python\HODACA_calibration
+#cd C:\Users\h34\Documents\Python\HODACA_calibration
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -323,7 +323,7 @@ calc_button = ttk.Button(HKL, text="A2 calculation",command = A2calc)
 calc_button.grid(row=6, column=0, columnspan=3, sticky="NSEW")
 
 # モノクロメータの d 値 [Å]
-d_mono = 3.355/2 
+d_mono = 3.355
 
 # 残差関数 (最小化する目的関数)
 def residuals(params, d_hkl, theta_obs):
@@ -400,12 +400,12 @@ def A1A2fitting():
     H, K, L, thetaobs, thetacal,d_hkl = np.array(dataset).T
     theta_obs = np.radians(thetaobs / 2)  # 2θ → θ に変換
     theta_cal = np.radians(thetacal / 2)  # 2θ → θ に変換
+    
     # 初期値 (ΔA1 = 0°, ΔA2 = 0°)
     initial_guess = [0.0, 0.0]
     # グローバル最適化 (basinhopping)
     minimizer_kwargs = {"method": "L-BFGS-B", "args": (d_hkl, theta_obs)}
     result = basinhopping(residuals, initial_guess, minimizer_kwargs=minimizer_kwargs, niter=200, T=1.0, stepsize=0.5)
-
     # 最適化されたパラメータ
     delta_A1_fit, delta_A2_fit = result.x
 
