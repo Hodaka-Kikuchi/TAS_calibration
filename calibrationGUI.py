@@ -19,7 +19,7 @@ from tkinter import filedialog
 import os
 
 # 右上にバージョン情報を表示
-__version__ = '1.2.1'
+__version__ = '1.3.0'
 
 # tlinterのインポート
 import tkinter as tk
@@ -320,7 +320,7 @@ def A2calc():
 
 # A2calcボタン
 calc_button = ttk.Button(HKL, text="A2 calculation",command = A2calc)
-calc_button.grid(row=6, column=0, columnspan=3, sticky="NSEW")
+calc_button.grid(row=6, column=0, columnspan=2, sticky="NSEW")
 
 # モノクロメータの d 値 [Å]
 d_mono = 3.355
@@ -403,11 +403,53 @@ def A1A2fitting():
     
     # 初期値 (ΔA1 = 0°, ΔA2 = 0°)
     initial_guess = [0.0, 0.0]
+    # チェック状態取得
+    fix_A1 = A1fix_var.get()
+    fix_A2 = A2fix_var.get()
+    # 分岐
+    if fix_A1 and not fix_A2:
+        # A1固定 → ΔA1 = 0
+        def residuals_A2_only(params, d_hkl, theta_obs):
+            delta_A2 = params[0]
+            delta_A1 = 0.0
+            return residuals([delta_A1, delta_A2], d_hkl, theta_obs)
+
+        minimizer_kwargs = {"method": "L-BFGS-B", "args": (d_hkl, theta_obs)}
+        result = basinhopping(residuals_A2_only, [0.0], minimizer_kwargs=minimizer_kwargs)
+
+        delta_A1_fit = 0.0
+        delta_A2_fit = result.x[0]
+
+    elif fix_A2 and not fix_A1:
+        # A2固定 → ΔA2 = 0
+        def residuals_A1_only(params, d_hkl, theta_obs):
+            delta_A1 = params[0]
+            delta_A2 = 0.0
+            return residuals([delta_A1, delta_A2], d_hkl, theta_obs)
+
+        minimizer_kwargs = {"method": "L-BFGS-B", "args": (d_hkl, theta_obs)}
+        result = basinhopping(residuals_A1_only, [0.0], minimizer_kwargs=minimizer_kwargs)
+
+        delta_A1_fit = result.x[0]
+        delta_A2_fit = 0.0
+
+    elif fix_A1 and fix_A2:
+        delta_A1_fit = 0.0
+        delta_A2_fit = 0.0
+
+    else:
+        # 通常（両方フィット）
+        minimizer_kwargs = {"method": "L-BFGS-B", "args": (d_hkl, theta_obs)}
+        result = basinhopping(residuals, initial_guess, minimizer_kwargs=minimizer_kwargs)
+
+        delta_A1_fit, delta_A2_fit = result.x
+    '''
     # グローバル最適化 (basinhopping)
     minimizer_kwargs = {"method": "L-BFGS-B", "args": (d_hkl, theta_obs)}
     result = basinhopping(residuals, initial_guess, minimizer_kwargs=minimizer_kwargs, niter=200, T=1.0, stepsize=0.5)
     # 最適化されたパラメータ
     delta_A1_fit, delta_A2_fit = result.x
+    '''
 
     # フィッティング後の波長とモノクロメータ回転角
     A1_ideal = np.arcsin(lambda_ideal / (2 * d_mono))
@@ -494,7 +536,18 @@ def A1A2fitting():
     
 # fittingボタン
 fit_button = ttk.Button(HKL, text="fitting",command = A1A2fitting)
-fit_button.grid(row=6, column=3, columnspan=3, sticky="NSEW")
+fit_button.grid(row=6, column=2, columnspan=2, sticky="NSEW")
+
+# チェックボックス用の変数
+A1fix_var = tk.BooleanVar()
+A2fix_var = tk.BooleanVar()
+
+# チェックボタン
+A1fix_check = ttk.Checkbutton(HKL, text="fix ΔA1 = 0", variable=A1fix_var)
+A2fix_check = ttk.Checkbutton(HKL, text="fix ΔA2 = 0", variable=A2fix_var)
+
+A1fix_check.grid(row=6, column=4, sticky="W")
+A2fix_check.grid(row=6, column=5, sticky="W")
 
 # 1. 結果表示用のフレームを作成（初回のみでOK）
 result_frame = ttk.Frame(frame1)  # frame1 はあなたのメインウィンドウ
