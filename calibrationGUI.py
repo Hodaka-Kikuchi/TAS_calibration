@@ -19,7 +19,7 @@ from tkinter import filedialog
 import os
 
 # 右上にバージョン情報を表示
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 # tlinterのインポート
 import tkinter as tk
@@ -527,7 +527,7 @@ def A1A2fitting():
     # プロット
     theta_fit = np.arcsin(lambda_fit / (2 * d_hkl)) + np.radians(delta_A2_fit / 2)
     plt.scatter(np.degrees(theta_obs * 2), np.degrees(theta_fit * 2), label="Fitted", color="red")
-    plt.plot([30, 110], [30, 110], linestyle="--", color="black", label="y=x (ideal)")
+    plt.plot([np.min(np.degrees(theta_obs * 2))-5, np.max(np.degrees(theta_obs * 2))+5], [np.min(np.degrees(theta_fit * 2))-5, np.max(np.degrees(theta_fit * 2))+5], linestyle="--", color="black", label="y=x (ideal)")
     plt.xlabel("Observed 2θ [deg]")
     plt.ylabel("Fitted 2θ [deg]")
     plt.legend()
